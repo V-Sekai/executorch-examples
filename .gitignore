@@ -15,3 +15,5 @@ xcuserdata/
 .swiftpm/
 *.xcworkspace/
 *.xcframework/
+linear_regression/artifacts
+linear_regression/models

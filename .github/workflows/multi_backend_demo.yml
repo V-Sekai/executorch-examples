@@ -1,0 +1,112 @@
+name: Multi-Backend Linear Regression Demo
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.name }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: Linux (XNNPACK + Vulkan)
+            backends: xnnpack,vulkan
+            install_deps: true
+            training_pipeline: true
+            cpp_build: true
+          - os: macos-latest
+            name: macOS (MPS + XNNPACK)
+            backends: mps,xnnpack
+            install_deps: false
+            training_pipeline: false
+            cpp_build: true
+    
+    env:
+      PYTHONIOENCODING: utf-8
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install System Dependencies (Linux)
+        if: matrix.install_deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ninja-build \
+            vulkan-tools \
+            libvulkan-dev \
+            vulkan-utility-libraries-dev \
+            spirv-tools \
+            glslang-tools \
+            cmake \
+            build-essential \
+      
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r linear_regression/python/requirements.txt
+          python -m pip install zstd certifi
+
+      - name: Install ExecuTorch with Backends
+        run: |
+          chmod +x scripts/install_executorch_backends.sh
+          ./scripts/install_executorch_backends.sh
+
+      - name: Export Multi-Backend Models
+        run: |
+          cd linear_regression/python
+          python export_multi_backend.py
+
+      - name: Verify Model Files
+        run: |
+          ls -la linear_regression/models/
+          echo "Checking for required model files..."
+          for model in linear_xnnpack.pte linear_vulkan.pte linear_mps.pte linear_portable.pte; do
+            if [ -f "linear_regression/models/$model" ]; then
+              echo "✅ $model found"
+            else
+              echo "❌ $model missing"
+            fi
+          done
+
+      - name: Python Benchmark
+        run: |
+          cd linear_regression/python
+          python benchmark.py
+
+      - name: Test Training Pipeline
+        if: matrix.training_pipeline
+        run: |
+          cd linear_regression/python
+          echo "Testing complete training pipeline..."
+          python train.py
+          python export_trained_model.py
+          python benchmark_trained.py
+
+      - name: List File Tree
+        run: |
+          echo "Listing file tree for debugging..."
+          find . -maxdepth 3
+
+      - name: Build C++ Multi-Backend Demo
+        if: matrix.cpp_build
+        run: |
+          chmod +x linear_regression/cpp/build_multi.sh
+          ./linear_regression/cpp/build_multi.sh
+
+      - name: Run C++ Multi-Backend Demo
+        if: matrix.cpp_build
+        run: |
+          ./build_multi/bin/executorch_multi_backend_demo
