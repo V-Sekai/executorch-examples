@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
-project(executorch_mv2_demo CXX)
+project(executorch_linear_regression_demo CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -30,12 +30,12 @@ FetchContent_MakeAvailable(executorch)
 
 set(DEMO_SOURCES main.cpp)
 
-add_executable(executorch_mv2_demo_app ${DEMO_SOURCES})
+add_executable(executorch_linear_regression_demo_app ${DEMO_SOURCES})
 
-target_include_directories(executorch_mv2_demo_app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(executorch_linear_regression_demo_app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(
-  executorch_mv2_demo_app
+  executorch_linear_regression_demo_app
   PRIVATE executorch
   extension_module_static
   extension_tensor
@@ -43,7 +43,7 @@ target_link_libraries(
   xnnpack_backend
 )
 
-set_target_properties(executorch_mv2_demo_app
+set_target_properties(executorch_linear_regression_demo_app
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )

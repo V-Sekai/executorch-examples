@@ -1,0 +1,51 @@
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get install -y ninja-build
+          
+      - name: Install PyTorch
+        run: |
+          pip install torch torchvision torchaudio
+
+      - name: Install Executorch
+        run: |
+          pip install executorch zstd
+
+      - name: Run Linear Regression Example
+        run: |
+          cd linear_regression/python
+          python export.py
+          ls -la ../models/
+
+      - name: Verify Model File
+        run: |
+          ls -la linear_regression/models/
+          if [ ! -f "linear_regression/models/simple_linear.pte" ]; then
+            echo "❌ ERROR: simple_linear.pte not found!"
+            exit 1
+          fi
+          echo "✅ Model file found: simple_linear.pte"
+
+      - name: Run C++ Linear Regression Example
+        run: |
+          ./linear_regression/cpp/build.sh
+          ./build/bin/executorch_linear_regression_demo_app
