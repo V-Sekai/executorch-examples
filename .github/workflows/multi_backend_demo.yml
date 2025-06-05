@@ -58,51 +58,9 @@ jobs:
 
       - name: Install ExecuTorch with Backends
         run: |
-          echo "🔧 Installing ExecuTorch with Multi-Backend Support"
-          echo "=================================================="
-          
-          # Install basic dependencies
-          echo "📦 Installing base dependencies..."
           pip install scikit-learn matplotlib numpy
-          
-          # Try basic ExecuTorch installation first
-          echo "📦 Installing basic ExecuTorch..."
-          pip install executorch || echo "⚠️  Basic ExecuTorch installation failed"
-          
-          # System-specific backend installation
-          OS="$(uname -s)"
-          case "${OS}" in
-              Darwin*)
-                  echo "🍎 macOS detected - attempting MPS backend..."
-                  
-                  # Check if MPS is available
-                  python -c "import torch; print('MPS available:', torch.backends.mps.is_available())" || echo "MPS check failed"
-                  
-                  # Try to build with MPS support
-                  echo "🔨 Attempting to build ExecuTorch with MPS..."
-                  if [ -d "executorch" ]; then
-                      echo "✅ ExecuTorch submodule found"
-                  else
-                      echo "❌ ExecuTorch submodule not found"
-                      exit 1
-                  fi
-                  
-                  cd executorch
-                  pip install -r requirements.txt || echo "⚠️  Some requirements failed"
-                  
-                  # Try to build with MPS
-                  python setup.py develop --cmake-args="-DEXECUTORCH_BUILD_MPS=ON" || {
-                      echo "⚠️  MPS build failed, ExecuTorch will use XNNPACK fallback"
-                  }
-                  ;;
-                  
-              *)
-                  echo "ℹ️  Using basic ExecuTorch installation"
-                  ;;
-          esac
-          
-          echo ""
-          echo "✅ ExecuTorch installation complete!"
+          cd executorch
+          ./install_executorch.sh
 
       - name: Export Multi-Backend Models
         run: |
