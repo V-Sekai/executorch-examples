@@ -26,6 +26,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: pytorch/executorch
+          ref: v0.6.0
+          submodules: recursive
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -75,11 +80,11 @@ jobs:
                   
                   # Try to build with MPS support
                   echo "🔨 Attempting to build ExecuTorch with MPS..."
-                  if [ ! -d "executorch" ]; then
-                      git clone --depth 1 https://github.com/pytorch/executorch.git executorch || {
-                          echo "❌ Failed to clone ExecuTorch repository"
-                          exit 0
-                      }
+                  if [ -d "executorch" ]; then
+                      echo "✅ ExecuTorch submodule found"
+                  else
+                      echo "❌ ExecuTorch submodule not found"
+                      exit 1
                   fi
                   
                   cd executorch
