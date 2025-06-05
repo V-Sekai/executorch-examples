@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(FetchContent)
 
+add_subdirectory("../../executorch" executorch)
+
 set(EXECUTORCH_BUILD_BUCK2 OFF CACHE BOOL "Disable Buck2 build" FORCE)
 set(BUCK OFF CACHE BOOL "Disable Buck2" FORCE)
 
@@ -18,15 +20,6 @@ set(EXECUTORCH_ENABLE_LOGGING ON CACHE BOOL "Enable logging" FORCE)
 set(EXECUTORCH_BUILD_EXTENSION_DATA_LOADER ON CACHE BOOL "Enable data loader" FORCE)
 set(EXECUTORCH_BUILD_EXTENSION_MODULE ON CACHE BOOL "Enable module extension" FORCE)
 set(EXECUTORCH_BUILD_EXTENSION_TENSOR ON CACHE BOOL "Enable tensor extension" FORCE)
-
-FetchContent_Declare(
-  executorch
-  GIT_REPOSITORY https://github.com/pytorch/executorch.git
-  GIT_TAG 9820413e60970d6aa03bba7d5a8b5223804d1955
-  SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/executorch
-)
-
-FetchContent_MakeAvailable(executorch)
 
 set(DEMO_SOURCES main.cpp)
 
