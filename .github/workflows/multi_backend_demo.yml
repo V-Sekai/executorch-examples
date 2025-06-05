@@ -52,11 +52,6 @@ jobs:
           python -m pip install zstd certifi torch torchvision torchaudio
           python -m pip install scikit-learn matplotlib numpy executorch
 
-      - name: Install ExecuTorch with Backends
-        working-directory: executorch
-        run: |
-          ./install_executorch.sh
-
       - name: Export Multi-Backend Models
         run: |
           cd linear_regression/python
