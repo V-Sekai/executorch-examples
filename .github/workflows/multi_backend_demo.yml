@@ -17,7 +17,6 @@ jobs:
         include:
           - os: macos-latest
             name: macOS (MPS + XNNPACK)
-            backends: mps,xnnpack,vulkan,training
             install_deps: false
             training_pipeline: false
             cpp_build: true
@@ -56,7 +55,7 @@ jobs:
       - name: Install ExecuTorch with Backends
         run: |
           chmod +x scripts/install_executorch_backends.sh
-          ./scripts/install_executorch_backends.sh
+          ./scripts/install_executorch_backends.sh --pybind mps
 
       - name: Export Multi-Backend Models
         run: |
