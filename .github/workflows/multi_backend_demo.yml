@@ -15,9 +15,9 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-latest
-            name: macOS (MPS + XNNPACK)
-            install_deps: false
+          - os: ubuntu-latest
+            name: Linux (XNNPACK + Vulkan)
+            install_deps: true
             training_pipeline: false
             cpp_build: true
     
