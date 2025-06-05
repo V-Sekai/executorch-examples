@@ -36,15 +36,9 @@ else()
     message(STATUS "Not macOS, disabling MPS backend")
 endif()
 
-# Fetch ExecuTorch with custom source directory name
-FetchContent_Declare(
-    executorch
-    GIT_REPOSITORY https://github.com/pytorch/executorch.git
-    GIT_TAG main
-    SOURCE_DIR ${CMAKE_BINARY_DIR}/_deps/executorch
-)
-
-FetchContent_MakeAvailable(executorch)
+# Use existing ExecuTorch repository from the root of this git repo
+set(EXECUTORCH_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../../executorch)
+add_subdirectory(${EXECUTORCH_ROOT} executorch)
 
 # Create executable
 add_executable(executorch_multi_backend_demo main_multi_backend.cpp)
