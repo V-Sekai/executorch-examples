@@ -17,7 +17,7 @@ jobs:
         include:
           - os: macos-latest
             name: macOS (MPS + XNNPACK)
-            backends: mps,xnnpack
+            backends: mps,xnnpack,vulkan,training
             install_deps: false
             training_pipeline: false
             cpp_build: true
