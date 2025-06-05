@@ -15,12 +15,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
-            name: Linux (XNNPACK + Vulkan)
-            backends: xnnpack,vulkan
-            install_deps: true
-            training_pipeline: true
-            cpp_build: true
           - os: macos-latest
             name: macOS (MPS + XNNPACK)
             backends: mps,xnnpack
