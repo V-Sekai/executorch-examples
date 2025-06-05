@@ -28,6 +28,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
         with:
+          path: executorch
           repository: pytorch/executorch
           ref: v0.6.0
           submodules: recursive
@@ -55,11 +56,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install zstd certifi torch torchvision torchaudio
+          python -m pip install scikit-learn matplotlib numpy
 
       - name: Install ExecuTorch with Backends
+        working-directory: executorch
         run: |
-          pip install scikit-learn matplotlib numpy
-          cd executorch
           ./install_executorch.sh
 
       - name: Export Multi-Backend Models
