@@ -46,87 +46,96 @@ def main():
     
     # 1. XNNPACK (CPU optimized - always available)
     print("\n📱 Exporting XNNPACK backend (CPU optimized)...")
-    xnnpack_success, xnnpack_backend = export_model(
+    xnnpack_print_name = "XNNPACK"
+    xnnpack_file_name_suffix = "xnnpack"
+    xnnpack_filename = os.path.join(models_dir, f"linear_{xnnpack_file_name_suffix}.pte")
+    xnnpack_success, _ = export_model(
         model, sample_inputs, 
         XnnpackPartitioner(),
-        os.path.join(models_dir, "linear_xnnpack.pte"),
-        "XNNPACK"
+        xnnpack_filename,
+        xnnpack_print_name
     )
     
     # 2. Vulkan (GPU compute - if available)
     print("\n🎮 Exporting Vulkan backend (GPU compute)...")
+    vulkan_print_name = "Vulkan" # Default print name
+    vulkan_file_name_suffix = "vulkan" # Default file suffix
     try:
         from executorch.backends.vulkan.partition.vulkan_partitioner import VulkanPartitioner
-        vulkan_success, vulkan_backend = export_model(
+        vulkan_filename = os.path.join(models_dir, f"linear_{vulkan_file_name_suffix}.pte")
+        vulkan_success, _ = export_model(
             model, sample_inputs,
             VulkanPartitioner(),
-            os.path.join(models_dir, "linear_vulkan.pte"),
-            "Vulkan"
+            vulkan_filename,
+            vulkan_print_name
         )
     except ImportError:
         print("⚠️  Vulkan backend not available, creating fallback to XNNPACK...")
-        vulkan_success, vulkan_backend = export_model(
+        vulkan_print_name = "XNNPACK (Vulkan fallback)"
+        vulkan_file_name_suffix = "xnnpack_as_vulkan_fallback"
+        vulkan_filename = os.path.join(models_dir, f"linear_{vulkan_file_name_suffix}.pte")
+        vulkan_success, _ = export_model(
             model, sample_inputs,
             XnnpackPartitioner(),
-            os.path.join(models_dir, "linear_vulkan.pte"),
-            "XNNPACK (Vulkan fallback)"
+            vulkan_filename,
+            vulkan_print_name
         )
     
     # 3. MPS (Apple Metal - if on macOS)
     print("\n🍎 Exporting MPS backend (Apple Metal)...")
+    mps_print_name = "MPS" # Default print name
+    mps_file_name_suffix = "mps" # Default file suffix
     if platform.system() == "Darwin":
         try:
             from executorch.backends.mps.partition.mps_partitioner import MPSPartitioner
-            mps_success, mps_backend = export_model(
+            mps_filename = os.path.join(models_dir, f"linear_{mps_file_name_suffix}.pte")
+            mps_success, _ = export_model(
                 model, sample_inputs,
                 MPSPartitioner(),
-                os.path.join(models_dir, "linear_mps.pte"),
-                "MPS"
+                mps_filename,
+                mps_print_name
             )
         except ImportError:
             print("⚠️  MPS backend not available, creating fallback to XNNPACK...")
-            mps_success, mps_backend = export_model(
+            mps_print_name = "XNNPACK (MPS fallback)"
+            mps_file_name_suffix = "xnnpack_as_mps_fallback"
+            mps_filename = os.path.join(models_dir, f"linear_{mps_file_name_suffix}.pte")
+            mps_success, _ = export_model(
                 model, sample_inputs,
                 XnnpackPartitioner(),
-                os.path.join(models_dir, "linear_mps.pte"),
-                "XNNPACK (MPS fallback)"
+                mps_filename,
+                mps_print_name
             )
     else:
         print("⚠️  Not on macOS, creating fallback to XNNPACK...")
-        mps_success, mps_backend = export_model(
+        mps_print_name = "XNNPACK (macOS fallback)"
+        mps_file_name_suffix = "xnnpack_as_macos_fallback"
+        mps_filename = os.path.join(models_dir, f"linear_{mps_file_name_suffix}.pte")
+        mps_success, _ = export_model(
             model, sample_inputs,
             XnnpackPartitioner(),
-            os.path.join(models_dir, "linear_mps.pte"),
-            "XNNPACK (macOS fallback)"
+            mps_filename,
+            mps_print_name
         )
     
     # 4. Portable (no backend optimization - reference)
     print("\n🔧 Exporting Portable backend (reference implementation)...")
-    portable_success, portable_backend = export_model(
+    portable_print_name = "Portable"
+    portable_file_name_suffix = "portable"
+    portable_filename = os.path.join(models_dir, f"linear_{portable_file_name_suffix}.pte")
+    portable_success, _ = export_model(
         model, sample_inputs,
         None,  # No partitioner = portable
-        os.path.join(models_dir, "linear_portable.pte"),
-        "Portable"
+        portable_filename,
+        portable_print_name
     )
     
     # Summary
     print("\n📊 Export Summary:")
-    print(f"   XNNPACK (CPU): {'✅' if xnnpack_success else '❌'} ({xnnpack_backend})")
-    print(f"   Vulkan (GPU):  {'✅' if vulkan_success else '❌'} ({vulkan_backend})")
-    print(f"   MPS (Apple):   {'✅' if mps_success else '❌'} ({mps_backend})")
-    print(f"   Portable:      {'✅' if portable_success else '❌'} ({portable_backend})")
-    
-    # Save backend metadata for benchmark script
-    metadata = {
-        'linear_xnnpack.pte': xnnpack_backend,
-        'linear_vulkan.pte': vulkan_backend, 
-        'linear_mps.pte': mps_backend,
-        'linear_portable.pte': portable_backend
-    }
-    
-    import json
-    with open(os.path.join(models_dir, "backend_metadata.json"), "w") as f:
-        json.dump(metadata, f, indent=2)
+    print(f"   XNNPACK (CPU): {'✅' if xnnpack_success else '❌'} (linear_{xnnpack_file_name_suffix}.pte)")
+    print(f"   Vulkan (GPU):  {'✅' if vulkan_success else '❌'} (linear_{vulkan_file_name_suffix}.pte)")
+    print(f"   MPS (Apple):   {'✅' if mps_success else '❌'} (linear_{mps_file_name_suffix}.pte)")
+    print(f"   Portable:      {'✅' if portable_success else '❌'} (linear_{portable_file_name_suffix}.pte)")
     
     if all([xnnpack_success, vulkan_success, mps_success, portable_success]):
         print("\n🎉 All models exported successfully!")

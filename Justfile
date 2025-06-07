@@ -37,6 +37,8 @@ install-executorch-script: install-base-env
     @echo "Cloning ExecuTorch repository (branch {{EXECUTORCH_BRANCH}})..."
     rm -rf {{EXECUTORCH_CLONE_DIR}}
     git clone --depth 1 --branch {{EXECUTORCH_BRANCH}} {{EXECUTORCH_REPO_URL}} {{EXECUTORCH_CLONE_DIR}}
+    @echo "Installing ExecuTorch requirements using install_requirements.sh..."
+    (cd {{EXECUTORCH_CLONE_DIR}} && MAMBA_ROOT_PREFIX=../{{MAMBA_ROOT_PREFIX_VAR}} ../bin/micromamba run -n {{ENV_NAME}} bash ./install_requirements.sh)
     @echo "Installing ExecuTorch using install_executorch.sh..."
     (cd {{EXECUTORCH_CLONE_DIR}} && MAMBA_ROOT_PREFIX=../{{MAMBA_ROOT_PREFIX_VAR}} ../bin/micromamba run -n {{ENV_NAME}} bash ./install_executorch.sh)
 
