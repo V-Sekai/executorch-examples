@@ -6,6 +6,8 @@ echo "Using Python executable: $python_executable"
 echo "Installing to site-packages: $site_packages_dir"
 mkdir -p cmake-build
 cd cmake-build
+# Remove CMakeCache.txt and CMakeFiles/ to ensure a clean configure
+rm -rf CMakeCache.txt CMakeFiles/
 cmake .. \
     -DCMAKE_C_COMPILER=/usr/bin/gcc \
     -DCMAKE_CXX_COMPILER=/usr/bin/g++ \
