@@ -82,6 +82,8 @@ install-deps: build-executorch-cmake
     MAMBA_ROOT_PREFIX={{MAMBA_ROOT_PREFIX_VAR}} {{MICROMAMBA_EXE}} run -n {{ENV_NAME}} pip install zstd certifi torch torchvision torchaudio scikit-learn matplotlib numpy
 
 test: install-deps
+    @echo "Listing installed executorch files..."
+    MAMBA_ROOT_PREFIX={{MAMBA_ROOT_PREFIX_VAR}} {{MICROMAMBA_EXE}} run -n {{ENV_NAME}} bash -c 'INSTALLED_SITE_PACKAGES=$(python -c "import site; print(site.getsitepackages()[0])"); ET_PKG_DIR=$INSTALLED_SITE_PACKAGES/executorch; if [ -d "$ET_PKG_DIR" ]; then ls -R "$ET_PKG_DIR"; else echo "Directory $ET_PKG_DIR does not exist."; fi'
     MAMBA_ROOT_PREFIX={{MAMBA_ROOT_PREFIX_VAR}} {{MICROMAMBA_EXE}} run -n {{ENV_NAME}} --cwd linear_regression/python python export_multi_backend.py
     MAMBA_ROOT_PREFIX={{MAMBA_ROOT_PREFIX_VAR}} {{MICROMAMBA_EXE}} run -n {{ENV_NAME}} --cwd linear_regression/python python benchmark.py
 
