@@ -40,7 +40,7 @@ install-executorch-script: install-base-env
     @echo "Installing ExecuTorch requirements using install_requirements.sh..."
     (cd {{EXECUTORCH_CLONE_DIR}} && MAMBA_ROOT_PREFIX=../{{MAMBA_ROOT_PREFIX_VAR}} ../bin/micromamba run -n {{ENV_NAME}} bash ./install_requirements.sh)
     @echo "Installing ExecuTorch using install_executorch.sh..."
-    (cd {{EXECUTORCH_CLONE_DIR}} && MAMBA_ROOT_PREFIX=../{{MAMBA_ROOT_PREFIX_VAR}} ../bin/micromamba run -n {{ENV_NAME}} bash ./install_executorch.sh --pybind vulkan,xnnpack)
+    (cd {{EXECUTORCH_CLONE_DIR}} && MAMBA_ROOT_PREFIX=../{{MAMBA_ROOT_PREFIX_VAR}} ../bin/micromamba run -n {{ENV_NAME}} CMAKE_ARGS="-DEXECUTORCH_BUILD_VULKAN=ON" bash ./install_executorch.sh --pybind xnnpack)
 
 install-deps: install-executorch-script
     MAMBA_ROOT_PREFIX={{MAMBA_ROOT_PREFIX_VAR}} {{MICROMAMBA_EXE}} run -n {{ENV_NAME}} pip install --upgrade pip
