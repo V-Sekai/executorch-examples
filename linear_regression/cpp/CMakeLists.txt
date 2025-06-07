@@ -27,7 +27,6 @@ else()
     message(STATUS "Vulkan not found, disabling Vulkan backend")
 endif()
 
-# Enable MPS on macOS
 if(APPLE)
     set(EXECUTORCH_BUILD_MPS ON CACHE BOOL "Enable MPS" FORCE)
     message(STATUS "macOS detected, enabling MPS backend")
@@ -36,9 +35,13 @@ else()
     message(STATUS "Not macOS, disabling MPS backend")
 endif()
 
-# Use existing ExecuTorch repository from the root of this git repo
-set(EXECUTORCH_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../../executorch)
-add_subdirectory(${EXECUTORCH_ROOT} executorch)
+FetchContent_Declare(
+    executorch
+    GIT_REPOSITORY https://github.com/pytorch/executorch.git
+    GIT_TAG v0.6.0
+    SOURCE_DIR ${FETCHCONTENT_BASE_DIR}/executorch
+)
+FetchContent_MakeAvailable(executorch)
 
 # Create executable
 add_executable(executorch_multi_backend_demo main_multi_backend.cpp)
