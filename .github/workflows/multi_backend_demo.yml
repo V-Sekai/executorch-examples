@@ -26,8 +26,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get update && sudo apt-get install -y just libvulkan1 mesa-vulkan-drivers
-
+          sudo apt-get update && sudo apt-get install -y just
+          
       - name: Install Vulkan SDK
         uses: jakoch/install-vulkan-sdk-action@v1
         with:
