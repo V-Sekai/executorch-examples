@@ -61,7 +61,7 @@ def main():
     vulkan_print_name = "Vulkan" # Default print name
     vulkan_file_name_suffix = "vulkan" # Default file suffix
     try:
-        from executorch.backends.vulkan.partition.vulkan_partitioner import VulkanPartitioner
+        from executorch.partition.vulkan import VulkanPartitioner
         vulkan_filename = os.path.join(models_dir, f"linear_{vulkan_file_name_suffix}.pte")
         vulkan_success, _ = export_model(
             model, sample_inputs,
@@ -87,7 +87,7 @@ def main():
     mps_file_name_suffix = "mps" # Default file suffix
     if platform.system() == "Darwin":
         try:
-            from executorch.backends.mps.partition.mps_partitioner import MPSPartitioner
+            from executorch.partition.mps import MPSPartitioner
             mps_filename = os.path.join(models_dir, f"linear_{mps_file_name_suffix}.pte")
             mps_success, _ = export_model(
                 model, sample_inputs,
