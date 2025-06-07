@@ -16,4 +16,15 @@ xcuserdata/
 *.xcworkspace/
 *.xcframework/
 linear_regression/artifacts
-linear_regression/models
+
+# Micromamba
+.micromamba_root/
+bin/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Build artifacts
+linear_regression/models/
