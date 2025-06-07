@@ -2,8 +2,44 @@ import torch
 import torch.nn as nn
 import os
 import platform
-from executorch.backends.xnnpack.partition.xnnpack_partitioner import XnnpackPartitioner
+
+# Try new API first, then fallback to old API for XNNPACK
+try:
+    from executorch.partition.xnnpack import XnnpackPartitioner
+except ImportError:
+    try:
+        from executorch.backends.xnnpack.partition.xnnpack_partitioner import XnnpackPartitioner
+    except ImportError as e:
+        raise ImportError(
+            "XnnpackPartitioner could not be imported. "
+            "Check your executorch installation and API location."
+        ) from e
+
 from executorch.exir import to_edge_transform_and_lower
+
+# For Vulkan partitioner
+def get_vulkan_partitioner():
+    try:
+        from executorch.partition.vulkan import VulkanPartitioner
+        return VulkanPartitioner
+    except ImportError:
+        try:
+            from executorch.backends.vulkan.partition.vulkan_partitioner import VulkanPartitioner
+            return VulkanPartitioner
+        except ImportError:
+            return None
+
+# For MPS partitioner
+def get_mps_partitioner():
+    try:
+        from executorch.partition.mps import MPSPartitioner
+        return MPSPartitioner
+    except ImportError:
+        try:
+            from executorch.backends.mps.partition.mps_partitioner import MPSPartitioner
+            return MPSPartitioner
+        except ImportError:
+            return None
 
 # Simple linear regression model
 class SimpleLinearModel(nn.Module):
@@ -58,22 +94,30 @@ def main():
     
     # 2. Vulkan (GPU compute - if available)
     print("\n🎮 Exporting Vulkan backend (GPU compute)...")
-    vulkan_print_name = "Vulkan" # Default print name
-    vulkan_file_name_suffix = "vulkan" # Default file suffix
-    try:
-        from executorch.partition.vulkan import VulkanPartitioner
-        vulkan_filename = os.path.join(models_dir, f"linear_{vulkan_file_name_suffix}.pte")
-        vulkan_success, _ = export_model(
-            model, sample_inputs,
-            VulkanPartitioner(),
-            vulkan_filename,
-            vulkan_print_name
-        )
-    except ImportError:
-        print("⚠️  Vulkan backend not available, creating fallback to XNNPACK...")
+    vulkan_print_name = "Vulkan"
+    vulkan_file_name_suffix = "vulkan"
+    vulkan_success = False
+    VulkanPartitioner = get_vulkan_partitioner()
+
+    if VulkanPartitioner is not None:
+        try:
+            vulkan_filename = os.path.join(models_dir, f"linear_{vulkan_file_name_suffix}.pte")
+            vulkan_success, _ = export_model(
+                model, sample_inputs,
+                VulkanPartitioner(),
+                vulkan_filename,
+                vulkan_print_name
+            )
+        except Exception as e: # Catch any error during export_model
+            print(f"❌ Failed to export with VulkanPartitioner: {e}")
+            vulkan_success = False # Ensure success is false on exception
+    
+    if not vulkan_success: # Fallback if VulkanPartitioner is None or export failed
+        print("⚠️  Vulkan backend not available or export failed, creating fallback to XNNPACK...")
         vulkan_print_name = "XNNPACK (Vulkan fallback)"
         vulkan_file_name_suffix = "xnnpack_as_vulkan_fallback"
         vulkan_filename = os.path.join(models_dir, f"linear_{vulkan_file_name_suffix}.pte")
+        # Update vulkan_success with the result of the fallback export
         vulkan_success, _ = export_model(
             model, sample_inputs,
             XnnpackPartitioner(),
@@ -83,23 +127,31 @@ def main():
     
     # 3. MPS (Apple Metal - if on macOS)
     print("\n🍎 Exporting MPS backend (Apple Metal)...")
-    mps_print_name = "MPS" # Default print name
-    mps_file_name_suffix = "mps" # Default file suffix
+    mps_print_name = "MPS"
+    mps_file_name_suffix = "mps"
+    mps_success = False
+    MPSPartitioner = get_mps_partitioner()
+
     if platform.system() == "Darwin":
-        try:
-            from executorch.partition.mps import MPSPartitioner
-            mps_filename = os.path.join(models_dir, f"linear_{mps_file_name_suffix}.pte")
-            mps_success, _ = export_model(
-                model, sample_inputs,
-                MPSPartitioner(),
-                mps_filename,
-                mps_print_name
-            )
-        except ImportError:
-            print("⚠️  MPS backend not available, creating fallback to XNNPACK...")
+        if MPSPartitioner is not None:
+            try:
+                mps_filename = os.path.join(models_dir, f"linear_{mps_file_name_suffix}.pte")
+                mps_success, _ = export_model(
+                    model, sample_inputs,
+                    MPSPartitioner(),
+                    mps_filename,
+                    mps_print_name
+                )
+            except Exception as e: # Catch any error during export_model
+                print(f"❌ Failed to export with MPSPartitioner: {e}")
+                mps_success = False # Ensure success is false on exception
+        
+        if not mps_success: # Fallback if MPSPartitioner is None or export failed
+            print("⚠️  MPS backend not available or export failed, creating fallback to XNNPACK...")
             mps_print_name = "XNNPACK (MPS fallback)"
             mps_file_name_suffix = "xnnpack_as_mps_fallback"
             mps_filename = os.path.join(models_dir, f"linear_{mps_file_name_suffix}.pte")
+            # Update mps_success with the result of the fallback export
             mps_success, _ = export_model(
                 model, sample_inputs,
                 XnnpackPartitioner(),
@@ -107,7 +159,7 @@ def main():
                 mps_print_name
             )
     else:
-        print("⚠️  Not on macOS, creating fallback to XNNPACK...")
+        print("⚠️  Not on macOS, creating fallback to XNNPACK for MPS section...")
         mps_print_name = "XNNPACK (macOS fallback)"
         mps_file_name_suffix = "xnnpack_as_macos_fallback"
         mps_filename = os.path.join(models_dir, f"linear_{mps_file_name_suffix}.pte")
