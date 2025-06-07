@@ -15,3 +15,18 @@ xcuserdata/
 .swiftpm/
 *.xcworkspace/
 *.xcframework/
+linear_regression/artifacts
+
+# Micromamba
+.micromamba_root/
+bin/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Build artifacts
+linear_regression/models/
+
+executorch

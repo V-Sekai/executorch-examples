@@ -1,0 +1,7 @@
+executorch==0.6.0
+torch>=2.0.0
+torchvision
+torchaudio
+scikit-learn>=1.0.0
+matplotlib>=3.5.0
+numpy>=1.21.0

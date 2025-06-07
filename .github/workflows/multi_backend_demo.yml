@@ -1,0 +1,72 @@
+name: Multi-Backend Linear Regression Demo
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.name }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: Linux (Python Tests)
+    
+    env:
+      PYTHONIOENCODING: utf-8
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install -y just gcc-10 g++-10
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 100
+          gcc --version
+          g++ --version
+          
+      - name: Install Vulkan SDK
+        uses: jakoch/install-vulkan-sdk-action@v1
+        with:
+          optional_components: com.lunarg.vulkan.vma
+          install_runtime: true
+          cache: true
+          stripdown: true
+          install_swiftshader: true
+          install_lavapipe: true
+
+      - name: Run Python Tests using Justfile. The Justfile handles micromamba setup, environment creation, and dependency installation.
+        run: just test
+
+      - name: Verify Model Files
+        run: |
+          ls -la linear_regression/models/
+          echo "Checking for at least one required model file..."
+          found_one=false
+          for model in linear_xnnpack.pte linear_vulkan.pte linear_portable.pte; do
+            if [ -f "linear_regression/models/$model" ]; then
+              echo "✅ $model found"
+              found_one=true
+            else
+              echo "ℹ️ $model not found (optional)"
+            fi
+          done
+
+          if [ "$found_one" = true ]; then
+            echo "✅ At least one backend model file was successfully generated."
+          else
+            echo "❌ None of the target backend model files (linear_xnnpack.pte, linear_vulkan.pte, linear_portable.pte) were found."
+            exit 1
+          fi
+
+      - name: Test Training Pipeline
+        run: |
+          echo "Testing complete training pipeline using Justfile..."
+          just test-training

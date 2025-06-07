@@ -1,1 +1,0 @@
-Example iOS app that uses LLM Swift APIs in extension/llm. Priority P0
