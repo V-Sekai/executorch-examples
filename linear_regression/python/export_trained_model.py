@@ -4,7 +4,7 @@ import os
 import platform
 import pickle
 import json
-from executorch.backends.xnnpack.partition.xnnpack_partitioner import XnnpackPartitioner
+from executorch.partition.xnnpack import XnnpackPartitioner
 from executorch.exir import to_edge_transform_and_lower
 
 class LinearRegressionModel(nn.Module):
