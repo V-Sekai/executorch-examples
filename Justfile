@@ -34,13 +34,17 @@ install-base-env: setup-micromamba
 
 # Clone and install ExecuTorch from script
 install-executorch-script: install-base-env
-    @echo "Cloning ExecuTorch repository (branch {{EXECUTORCH_BRANCH}})..."
-    rm -rf {{EXECUTORCH_CLONE_DIR}}
-    git clone --recursive --depth 1 --branch {{EXECUTORCH_BRANCH}} {{EXECUTORCH_REPO_URL}} {{EXECUTORCH_CLONE_DIR}}
+    @if [ ! -d "{{EXECUTORCH_CLONE_DIR}}/.git" ]; then \
+        echo "ExecuTorch directory '{{EXECUTORCH_CLONE_DIR}}' not found or not a git repository. Cloning..."; \
+        rm -rf "{{EXECUTORCH_CLONE_DIR}}"; \
+        git clone --recursive --depth 1 --branch {{EXECUTORCH_BRANCH}} {{EXECUTORCH_REPO_URL}} {{EXECUTORCH_CLONE_DIR}}; \
+    else \
+        echo "ExecuTorch directory '{{EXECUTORCH_CLONE_DIR}}' already exists. Skipping clone."; \
+    fi
     @echo "Installing ExecuTorch requirements using install_requirements.sh..."
     (cd {{EXECUTORCH_CLONE_DIR}} && MAMBA_ROOT_PREFIX=../{{MAMBA_ROOT_PREFIX_VAR}} ../bin/micromamba run -n {{ENV_NAME}} bash ./install_requirements.sh)
     @echo "Installing ExecuTorch using install_executorch.sh..."
-    (cd {{EXECUTORCH_CLONE_DIR}} && MAMBA_ROOT_PREFIX=../{{MAMBA_ROOT_PREFIX_VAR}} ../bin/micromamba run -n {{ENV_NAME}} CMAKE_ARGS="-DEXECUTORCH_BUILD_VULKAN=ON" bash ./install_executorch.sh --pybind xnnpack)
+    (cd {{EXECUTORCH_CLONE_DIR}} && MAMBA_ROOT_PREFIX=../{{MAMBA_ROOT_PREFIX_VAR}} ../bin/micromamba run -n {{ENV_NAME}} sh -c 'export CMAKE_ARGS="-DEXECUTORCH_BUILD_VULKAN=ON"; bash ./install_executorch.sh --pybind xnnpack')
 
 install-deps: install-executorch-script
     MAMBA_ROOT_PREFIX={{MAMBA_ROOT_PREFIX_VAR}} {{MICROMAMBA_EXE}} run -n {{ENV_NAME}} pip install --upgrade pip
