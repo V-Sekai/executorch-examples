@@ -26,7 +26,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get update && sudo apt-get install -y just
+          sudo apt-get update && sudo apt-get install -y just vulkan-sdk gcc-10 g++-10
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 100
+          gcc --version
+          g++ --version
           
       - name: Install Vulkan SDK
         uses: jakoch/install-vulkan-sdk-action@v1

@@ -16,7 +16,11 @@ setup-ubuntu:
     sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-noble.list http://packages.lunarg.com/vulkan/lunarg-vulkan-noble.list
     sudo rm -f /etc/apt/sources.list.d/lunarg-vulkan-jammy.list
     sudo apt-get update
-    sudo apt-get install -y git just libvulkan1 mesa-vulkan-drivers vulkan-sdk
+    sudo apt-get install -y git just libvulkan1 mesa-vulkan-drivers vulkan-sdk gcc-10 g++-10
+    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100
+    sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 100
+    gcc --version
+    g++ --version
 
 setup-micromamba:
     @if [ ! -f "{{MICROMAMBA_EXE}}" ]; then \
