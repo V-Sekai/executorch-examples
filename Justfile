@@ -2,7 +2,7 @@ MICROMAMBA_EXE := "./bin/micromamba"
 # For Linux x86_64. Users on other systems might need to adjust the download URL.
 MICROMAMBA_DOWNLOAD_URL := "https://micro.mamba.pm/api/micromamba/linux-64/latest"
 EXECUTORCH_REPO_URL := "https://github.com/pytorch/executorch.git"
-EXECUTORCH_BRANCH := "main"
+EXECUTORCH_BRANCH := "v0.6.0"
 EXECUTORCH_CLONE_DIR := "./executorch"
 
 ENV_NAME := "executorch_py_env"
@@ -40,7 +40,7 @@ install-executorch-script: install-base-env
     @echo "Installing ExecuTorch requirements using install_requirements.sh..."
     (cd {{EXECUTORCH_CLONE_DIR}} && MAMBA_ROOT_PREFIX=../{{MAMBA_ROOT_PREFIX_VAR}} ../bin/micromamba run -n {{ENV_NAME}} bash ./install_requirements.sh)
     @echo "Installing ExecuTorch using install_executorch.sh..."
-    (cd {{EXECUTORCH_CLONE_DIR}} && MAMBA_ROOT_PREFIX=../{{MAMBA_ROOT_PREFIX_VAR}} ../bin/micromamba run -n {{ENV_NAME}} bash ./install_executorch.sh)
+    (cd {{EXECUTORCH_CLONE_DIR}} && MAMBA_ROOT_PREFIX=../{{MAMBA_ROOT_PREFIX_VAR}} ../bin/micromamba run -n {{ENV_NAME}} bash ./install_executorch.sh --pybind vulkan,xnnpack)
 
 install-deps: install-executorch-script
     MAMBA_ROOT_PREFIX={{MAMBA_ROOT_PREFIX_VAR}} {{MICROMAMBA_EXE}} run -n {{ENV_NAME}} pip install --upgrade pip
