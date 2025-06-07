@@ -2,7 +2,7 @@ MICROMAMBA_EXE := "./bin/micromamba"
 # For Linux x86_64. Users on other systems might need to adjust the download URL.
 MICROMAMBA_DOWNLOAD_URL := "https://micro.mamba.pm/api/micromamba/linux-64/latest"
 EXECUTORCH_REPO_URL := "https://github.com/pytorch/executorch.git"
-EXECUTORCH_BRANCH := "v0.6.0"
+EXECUTORCH_BRANCH := "main"
 EXECUTORCH_CLONE_DIR := "./executorch"
 
 ENV_NAME := "executorch_py_env"
@@ -18,7 +18,6 @@ setup-ubuntu:
     sudo apt-get update
     sudo apt-get install -y git just libvulkan1 mesa-vulkan-drivers vulkan-sdk
 
-# Download and setup micromamba executable
 setup-micromamba:
     @if [ ! -f "{{MICROMAMBA_EXE}}" ]; then \
         echo "Downloading micromamba to {{MICROMAMBA_EXE}}..."; \
@@ -30,9 +29,41 @@ setup-micromamba:
     fi
 
 install-base-env: setup-micromamba
-    MAMBA_ROOT_PREFIX={{MAMBA_ROOT_PREFIX_VAR}} {{MICROMAMBA_EXE}} create -n {{ENV_NAME}} python={{PYTHON_VERSION}} pip git bash -c conda-forge -y || echo "Env '{{ENV_NAME}}' already exists or command failed."
+    MAMBA_ROOT_PREFIX={{MAMBA_ROOT_PREFIX_VAR}} {{MICROMAMBA_EXE}} create -n {{ENV_NAME}} python={{PYTHON_VERSION}} pip git bash coreutils -c conda-forge -y || echo "Env '{{ENV_NAME}}' already exists or command failed."
 
-# Clone and install ExecuTorch from script
+install-executorch-requirements: install-executorch-script
+    @echo "Installing ExecuTorch Python requirements (cmake, torch, etc.)..."
+    ( \
+    cd {{EXECUTORCH_CLONE_DIR}} && \
+    MAMBA_ROOT_PREFIX_ENV_VAR=../{{MAMBA_ROOT_PREFIX_VAR}} && \
+    MICROMAMBA_EXE_PATH=../bin/micromamba && \
+    ENV_PREFIX_PATH="$MAMBA_ROOT_PREFIX_ENV_VAR/envs/{{ENV_NAME}}" && \
+    chmod +x ../scripts/install_executorch_requirements.sh && \
+    $MICROMAMBA_EXE_PATH --root-prefix "$MAMBA_ROOT_PREFIX_ENV_VAR" run -p "$ENV_PREFIX_PATH" ../scripts/install_executorch_requirements.sh \
+    )
+
+configure-executorch-cmake: install-executorch-requirements
+    @echo "Configuring ExecuTorch with CMake..."
+    ( \
+    cd {{EXECUTORCH_CLONE_DIR}} && \
+    MAMBA_ROOT_PREFIX_ENV_VAR=../{{MAMBA_ROOT_PREFIX_VAR}} && \
+    MICROMAMBA_EXE_PATH=../bin/micromamba && \
+    ENV_PREFIX_PATH="$MAMBA_ROOT_PREFIX_ENV_VAR/envs/{{ENV_NAME}}" && \
+    chmod +x ../scripts/configure_executorch_cmake.sh && \
+    $MICROMAMBA_EXE_PATH --root-prefix "$MAMBA_ROOT_PREFIX_ENV_VAR" run -p "$ENV_PREFIX_PATH" ../scripts/configure_executorch_cmake.sh \
+    )
+
+build-executorch-cmake: configure-executorch-cmake
+    @echo "Building and installing ExecuTorch with CMake..."
+    ( \
+    cd {{EXECUTORCH_CLONE_DIR}}/cmake-build && \
+    MAMBA_ROOT_PREFIX_ENV_VAR=../../{{MAMBA_ROOT_PREFIX_VAR}} && \
+    MICROMAMBA_EXE_PATH=../../bin/micromamba && \
+    ENV_PREFIX_PATH="$MAMBA_ROOT_PREFIX_ENV_VAR/envs/{{ENV_NAME}}" && \
+    chmod +x ../../scripts/build_executorch_cmake.sh && \
+    $MICROMAMBA_EXE_PATH --root-prefix "$MAMBA_ROOT_PREFIX_ENV_VAR" run -p "$ENV_PREFIX_PATH" ../../scripts/build_executorch_cmake.sh \
+    )
+
 install-executorch-script: install-base-env
     @if [ ! -d "{{EXECUTORCH_CLONE_DIR}}/.git" ]; then \
         echo "ExecuTorch directory '{{EXECUTORCH_CLONE_DIR}}' not found or not a git repository. Cloning..."; \
@@ -41,12 +72,8 @@ install-executorch-script: install-base-env
     else \
         echo "ExecuTorch directory '{{EXECUTORCH_CLONE_DIR}}' already exists. Skipping clone."; \
     fi
-    @echo "Installing ExecuTorch requirements using install_requirements.sh..."
-    (cd {{EXECUTORCH_CLONE_DIR}} && MAMBA_ROOT_PREFIX=../{{MAMBA_ROOT_PREFIX_VAR}} ../bin/micromamba run -n {{ENV_NAME}} bash ./install_requirements.sh)
-    @echo "Installing ExecuTorch using install_executorch.sh..."
-    (cd {{EXECUTORCH_CLONE_DIR}} && MAMBA_ROOT_PREFIX=../{{MAMBA_ROOT_PREFIX_VAR}} ../bin/micromamba run -n {{ENV_NAME}} sh -c 'export CMAKE_ARGS="-DEXECUTORCH_BUILD_VULKAN=ON"; bash ./install_executorch.sh --pybind xnnpack')
 
-install-deps: install-executorch-script
+install-deps: build-executorch-cmake
     MAMBA_ROOT_PREFIX={{MAMBA_ROOT_PREFIX_VAR}} {{MICROMAMBA_EXE}} run -n {{ENV_NAME}} pip install --upgrade pip
     MAMBA_ROOT_PREFIX={{MAMBA_ROOT_PREFIX_VAR}} {{MICROMAMBA_EXE}} run -n {{ENV_NAME}} pip install zstd certifi torch torchvision torchaudio scikit-learn matplotlib numpy
 
