@@ -4,7 +4,16 @@ import os
 import platform
 import pickle
 import json
-from executorch.partition.xnnpack import XnnpackPartitioner
+try:
+    from executorch.partition.xnnpack import XnnpackPartitioner
+except ImportError:
+    try:
+        from executorch.backends.xnnpack.partition.xnnpack_partitioner import XnnpackPartitioner
+    except ImportError as e:
+        raise ImportError(
+            "XnnpackPartitioner could not be imported. "
+            "Check your executorch installation and API location."
+        ) from e
 from executorch.exir import to_edge_transform_and_lower
 
 class LinearRegressionModel(nn.Module):
