@@ -3,7 +3,7 @@ MICROMAMBA_EXE := "./bin/micromamba"
 MICROMAMBA_DOWNLOAD_URL := "https://micro.mamba.pm/api/micromamba/linux-64/latest"
 EXECUTORCH_REPO_URL := "https://github.com/pytorch/executorch.git"
 EXECUTORCH_BRANCH := "main"
-EXECUTORCH_CLONE_DIR := "./executorch_repo"
+EXECUTORCH_CLONE_DIR := "./executorch"
 
 ENV_NAME := "executorch_py_env"
 PYTHON_VERSION := "3.10"
