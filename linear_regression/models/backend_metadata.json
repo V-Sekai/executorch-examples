@@ -1,6 +1,0 @@
-{
-  "linear_xnnpack.pte": "XNNPACK",
-  "linear_vulkan.pte": "XNNPACK (Vulkan fallback)",
-  "linear_mps.pte": "XNNPACK (MPS fallback)",
-  "linear_portable.pte": "Portable"
-}
