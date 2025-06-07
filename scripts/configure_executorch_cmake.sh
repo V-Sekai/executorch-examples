@@ -7,6 +7,8 @@ echo "Installing to site-packages: $site_packages_dir"
 mkdir -p cmake-build
 cd cmake-build
 cmake .. \
+    -DCMAKE_C_COMPILER=/usr/bin/gcc \
+    -DCMAKE_CXX_COMPILER=/usr/bin/g++ \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX="$site_packages_dir" \
     -DEXECUTORCH_BUILD_PYBIND=ON \
